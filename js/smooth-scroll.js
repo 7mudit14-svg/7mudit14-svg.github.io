@@ -2,16 +2,14 @@
  * Smooth Scroll (Lenis), Mobile Navigation & Viewport-Aware Video Playback
  * - Lenis smooths wheel/trackpad scrolling on desktop; touch devices keep native momentum scrolling
  * - Anchor links (#project-arm, ...) glide to their section and respect scroll-margin-top under the fixed navbar
- * - Respects prefers-reduced-motion (falls back to native scrolling)
  * - Exposes window.PortfolioScroll.stop()/start() so modals can lock the page
  */
 
 (function () {
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let lenis = null;
 
     function initLenis() {
-        if (reduceMotion || typeof Lenis === 'undefined') return;
+        if (typeof Lenis === 'undefined') return;
 
         lenis = new Lenis({
             autoRaf: true,

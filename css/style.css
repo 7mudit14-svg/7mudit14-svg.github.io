@@ -156,16 +156,26 @@ code, pre, .font-mono {
     transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease, border-color 0.28s ease;
 }
 
-/* Tilt is mouse-only (see animations.js); promote to a GPU layer only while hovered */
-@media (hover: hover) and (pointer: fine) {
-    .tilt-card:hover {
+/* Glow-only cards (project sections): same hover glow + sheen as tilt cards, no 3D tilt */
+.glow-card {
+    position: relative;
+    transition: box-shadow 0.28s ease, border-color 0.28s ease;
+}
+
+/* Hover effects need a mouse; promote tilt cards to a GPU layer only while hovered */
+@media (any-hover: hover) {
+    .tilt-card:hover,
+    .glow-card:hover {
         box-shadow: var(--card-hover-shadow);
         border-color: var(--border-accent);
+    }
+    .tilt-card:hover {
         will-change: transform;
     }
 }
 
-.tilt-card .sheen-reflection {
+.tilt-card .sheen-reflection,
+.glow-card .sheen-reflection {
     position: absolute;
     top: 0;
     left: 0;
@@ -179,7 +189,8 @@ code, pre, .font-mono {
     z-index: 5;
 }
 
-.tilt-card:hover .sheen-reflection {
+.tilt-card:hover .sheen-reflection,
+.glow-card:hover .sheen-reflection {
     opacity: 1;
 }
 
@@ -1550,16 +1561,5 @@ section[id] {
 @media (hover: none) {
     .btn-primary:hover, .btn-outline:hover, .pipeline-step:hover, .tech-chip:hover {
         transform: none;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    html {
-        scroll-behavior: auto;
-    }
-    *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
     }
 }

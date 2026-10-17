@@ -18,7 +18,6 @@
     const MAX_PARTICLES = 180;
     const CONNECT_DISTANCE = 110;
     const CONNECT_DISTANCE_SQ = CONNECT_DISTANCE * CONNECT_DISTANCE;
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let rafId = null;
     let lastWidth = 0;
 
@@ -127,7 +126,6 @@
         // Theme tracking
         window.addEventListener('themechange', (e) => {
             currentTheme = e.detail.activeTheme;
-            if (reduceMotion) drawFrame(false);
         });
 
         // Spawn particles
@@ -139,16 +137,12 @@
             if (document.hidden) {
                 if (rafId) cancelAnimationFrame(rafId);
                 rafId = null;
-            } else if (!rafId && !reduceMotion) {
+            } else if (!rafId) {
                 rafId = requestAnimationFrame(animate);
             }
         });
 
-        if (reduceMotion) {
-            drawFrame(false); // one static frame, no motion
-        } else {
-            rafId = requestAnimationFrame(animate);
-        }
+        rafId = requestAnimationFrame(animate);
     }
 
     function syncParticleCount() {
@@ -166,7 +160,6 @@
         width = canvas.width = w;
         height = canvas.height = h;
         if (particles.length) syncParticleCount();
-        if (reduceMotion && ctx) drawFrame(false);
     }
 
     function onMouseMove(e) {

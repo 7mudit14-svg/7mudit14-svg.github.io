@@ -67,14 +67,14 @@
     // 2. 3D Pop-Out Card Physics (Google Antigravity style)
     // ==========================================
     function init3DCardTilt() {
-        // Tilt only makes sense with a real mouse; on touch screens it sticks after a tap
-        const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (!canHover || reduceMotion) return;
+        // Effects need a mouse; on pure touch screens a tapped card would stay tilted
+        if (!window.matchMedia('(any-hover: hover)').matches) return;
 
-        const tiltCards = document.querySelectorAll('.tilt-card');
+        // .tilt-card = 3D tilt + glow + sheen, .glow-card = glow + sheen only (no tilt)
+        const tiltCards = document.querySelectorAll('.tilt-card, .glow-card');
 
         tiltCards.forEach(card => {
+            const doTilt = card.classList.contains('tilt-card');
             // Append sheen overlay if not present
             if (!card.querySelector('.sheen-reflection')) {
                 const sheen = document.createElement('div');
@@ -101,6 +101,7 @@
                 card.style.setProperty('--mouse-x', `${pctX}%`);
                 card.style.setProperty('--mouse-y', `${pctY}%`);
 
+                if (!doTilt) return;
                 if (rafId) cancelAnimationFrame(rafId);
                 rafId = requestAnimationFrame(() => {
                     card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(14px) scale3d(1.015, 1.015, 1.015)`;
@@ -108,6 +109,7 @@
             });
 
             card.addEventListener('mouseleave', () => {
+                if (!doTilt) return;
                 if (rafId) cancelAnimationFrame(rafId);
                 card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateZ(0px) scale3d(1, 1, 1)';
             });
