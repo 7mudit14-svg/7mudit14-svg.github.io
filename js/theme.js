@@ -9,13 +9,20 @@
     const THEME_STORAGE_KEY = 'robotics_portfolio_theme_mode';
     const VALID_MODES = ['light', 'dark', 'auto'];
 
-    // Get initial saved mode or default to 'auto'
-    let currentMode = localStorage.getItem(THEME_STORAGE_KEY) || 'auto';
+    // Get initial saved mode or default to 'auto' (storage can throw in private mode)
+    let currentMode = 'auto';
+    try {
+        currentMode = localStorage.getItem(THEME_STORAGE_KEY) || 'auto';
+    } catch (e) { /* ignore */ }
     if (!VALID_MODES.includes(currentMode)) {
         currentMode = 'auto';
     }
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+    // Paint the resolved theme immediately (this script loads in <head>)
+    document.documentElement.setAttribute('data-theme-mode', currentMode);
+    document.documentElement.setAttribute('data-theme', currentMode === 'auto' ? (mediaQuery.matches ? 'dark' : 'light') : currentMode);
 
     function resolveActiveTheme(mode) {
         if (mode === 'auto') {
@@ -26,7 +33,9 @@
 
     function applyTheme(mode, notify = true) {
         currentMode = mode;
-        localStorage.setItem(THEME_STORAGE_KEY, mode);
+        try {
+            localStorage.setItem(THEME_STORAGE_KEY, mode);
+        } catch (e) { /* ignore */ }
         const activeTheme = resolveActiveTheme(mode);
 
         document.documentElement.setAttribute('data-theme-mode', mode);

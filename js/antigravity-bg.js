@@ -15,8 +15,18 @@
     let currentTheme = 'dark';
     let mouseTimeout;
 
-    const PARTICLE_COUNT = 180;
+    const MAX_PARTICLES = 180;
     const CONNECT_DISTANCE = 110;
+    const CONNECT_DISTANCE_SQ = CONNECT_DISTANCE * CONNECT_DISTANCE;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let rafId = null;
+    let lastWidth = 0;
+
+    // Scale particle count with screen area: ~180 on a desktop, ~50 on a phone.
+    // Connection cost grows with n², so this matters a lot on mobile GPUs/CPUs.
+    function targetParticleCount() {
+        return Math.max(45, Math.min(MAX_PARTICLES, Math.round((width * height) / 9000)));
+    }
 
     class Particle {
         constructor() {
@@ -52,9 +62,10 @@
             // Cursor interaction: Repulsion + vortex wake
             const dx = this.x - mouse.x;
             const dy = this.y - mouse.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
+            const distSq = dx * dx + dy * dy;
 
-            if (dist < mouse.radius && dist > 0) {
+            if (distSq < mouse.radius * mouse.radius && distSq > 0) {
+                const dist = Math.sqrt(distSq);
                 const force = (1 - dist / mouse.radius) * 3.5;
                 const nx = dx / dist;
                 const ny = dy / dist;
@@ -74,14 +85,11 @@
         }
 
         draw() {
-            const isDark = currentTheme === 'dark';
-            ctx.save();
-            ctx.globalAlpha = isDark ? this.alpha : this.alpha * 0.6;
+            ctx.globalAlpha = currentTheme === 'dark' ? this.alpha : this.alpha * 0.6;
             ctx.fillStyle = this.color;
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
             ctx.fill();
-            ctx.restore();
         }
     }
 
@@ -106,7 +114,7 @@
         resize();
         window.addEventListener('resize', resize, { passive: true });
 
-        // Mouse tracking
+        // Mouse tracking (only meaningful with a real pointer)
         window.addEventListener('mousemove', onMouseMove, { passive: true });
         window.addEventListener('mouseout', () => {
             mouse.x = -1000;
@@ -119,20 +127,46 @@
         // Theme tracking
         window.addEventListener('themechange', (e) => {
             currentTheme = e.detail.activeTheme;
+            if (reduceMotion) drawFrame(false);
         });
 
         // Spawn particles
         particles = [];
-        for (let i = 0; i < PARTICLE_COUNT; i++) {
-            particles.push(new Particle());
-        }
+        syncParticleCount();
 
-        animate();
+        // Stop drawing entirely while the tab is in the background
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (rafId) cancelAnimationFrame(rafId);
+                rafId = null;
+            } else if (!rafId && !reduceMotion) {
+                rafId = requestAnimationFrame(animate);
+            }
+        });
+
+        if (reduceMotion) {
+            drawFrame(false); // one static frame, no motion
+        } else {
+            rafId = requestAnimationFrame(animate);
+        }
+    }
+
+    function syncParticleCount() {
+        const target = targetParticleCount();
+        while (particles.length < target) particles.push(new Particle());
+        if (particles.length > target) particles.length = target;
     }
 
     function resize() {
-        width = canvas.width = window.innerWidth;
-        height = canvas.height = window.innerHeight;
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        // Mobile browsers fire resize when the URL bar slides; ignore height-only jitter
+        if (w === lastWidth && Math.abs(h - height) < 120 && particles.length) return;
+        lastWidth = w;
+        width = canvas.width = w;
+        height = canvas.height = h;
+        if (particles.length) syncParticleCount();
+        if (reduceMotion && ctx) drawFrame(false);
     }
 
     function onMouseMove(e) {
@@ -162,41 +196,48 @@
         const isDark = currentTheme === 'dark';
         const strokeColor = isDark ? 'rgba(66, 133, 244, ' : 'rgba(26, 115, 232, ';
 
+        ctx.lineWidth = 0.8;
         for (let i = 0; i < particles.length; i++) {
+            const pi = particles[i];
             for (let j = i + 1; j < particles.length; j++) {
-                const dx = particles[i].x - particles[j].x;
-                const dy = particles[i].y - particles[j].y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
+                const pj = particles[j];
+                const dx = pi.x - pj.x;
+                if (dx > CONNECT_DISTANCE || dx < -CONNECT_DISTANCE) continue; // cheap reject
+                const dy = pi.y - pj.y;
+                const distSq = dx * dx + dy * dy;
 
-                if (dist < CONNECT_DISTANCE) {
-                    const alpha = (1 - dist / CONNECT_DISTANCE) * (isDark ? 0.16 : 0.08);
+                if (distSq < CONNECT_DISTANCE_SQ) {
+                    const alpha = (1 - Math.sqrt(distSq) / CONNECT_DISTANCE) * (isDark ? 0.16 : 0.08);
                     ctx.strokeStyle = `${strokeColor}${alpha})`;
-                    ctx.lineWidth = 0.8;
                     ctx.beginPath();
-                    ctx.moveTo(particles[i].x, particles[i].y);
-                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.moveTo(pi.x, pi.y);
+                    ctx.lineTo(pj.x, pj.y);
                     ctx.stroke();
                 }
             }
         }
     }
 
-    function animate() {
+    function drawFrame(step) {
         ctx.clearRect(0, 0, width, height);
-
-        // Decay scroll velocity smoothly
-        scrollSpeed *= 0.92;
+        ctx.globalAlpha = 1;
 
         // Draw connecting threads
         drawConnections();
 
         // Update and draw particles
         for (let i = 0; i < particles.length; i++) {
-            particles[i].update();
+            if (step) particles[i].update();
             particles[i].draw();
         }
+        ctx.globalAlpha = 1;
+    }
 
-        requestAnimationFrame(animate);
+    function animate() {
+        // Decay scroll velocity smoothly
+        scrollSpeed *= 0.92;
+        drawFrame(true);
+        rafId = requestAnimationFrame(animate);
     }
 
     if (document.readyState === 'loading') {

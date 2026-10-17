@@ -19,6 +19,8 @@
  */
 
 (function () {
+    if (typeof THREE === 'undefined') return;
+
     let scene, camera, renderer, container;
     let robotGroup;
     let baseMesh, shoulderGroup, armGroup, elbowGroup, handGroup, payloadMesh;
@@ -51,6 +53,16 @@
     let lastClientY = 0;
     let hasReceivedCursor = false;
 
+    // Performance state: render only while the hero viewport is on screen and the tab is visible
+    const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+    let isInView = true;
+    let rafId = null;
+    let aimDirty = true;          // re-solve IK once per frame at most, only after input/scroll
+    let containerRect = null;     // cached; refreshed on scroll/resize instead of every frame
+    let hudEls = null;
+    let frameCount = 0;
+    const tmpWorldPos = new THREE.Vector3();
+
     function init() {
         container = document.getElementById('robot-3d-viewport');
         if (!container) return;
@@ -70,10 +82,11 @@
         renderer = new THREE.WebGLRenderer({
             antialias: true,
             alpha: true,
-            powerPreference: 'high-performance'
+            powerPreference: isCoarsePointer ? 'default' : 'high-performance'
         });
         renderer.setSize(container.clientWidth, container.clientHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        // Phones have 3x screens; 1.5x is visually identical here and ~4x cheaper to fill
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, isCoarsePointer ? 1.5 : 2));
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         container.appendChild(renderer.domElement);
@@ -128,7 +141,35 @@
         joints.j3 = targetJoints.j3;
         joints.j4 = targetJoints.j4;
 
-        animate();
+        hudEls = {
+            j1: document.getElementById('hud-j1'),
+            j2: document.getElementById('hud-j2'),
+            j3: document.getElementById('hud-j3'),
+            j4: document.getElementById('hud-j4'),
+            x: document.getElementById('hud-x'),
+            y: document.getElementById('hud-y'),
+            z: document.getElementById('hud-z')
+        };
+
+        // Pause the WebGL loop when the hero is scrolled away or the tab is hidden
+        const io = new IntersectionObserver((entries) => {
+            isInView = entries[0].isIntersecting;
+            if (isInView) {
+                aimDirty = true;
+                startLoop();
+            }
+        }, { threshold: 0 });
+        io.observe(container);
+
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) startLoop();
+        });
+
+        startLoop();
+    }
+
+    function startLoop() {
+        if (rafId === null) rafId = requestAnimationFrame(animate);
     }
 
     function updateSceneTheme(theme) {
@@ -145,8 +186,8 @@
         dirLight = new THREE.DirectionalLight(0xffffff, currentTheme === 'dark' ? 1.6 : 2.2);
         dirLight.position.set(3.5, 6, 4);
         dirLight.castShadow = true;
-        dirLight.shadow.mapSize.width = 1024;
-        dirLight.shadow.mapSize.height = 1024;
+        dirLight.shadow.mapSize.width = isCoarsePointer ? 512 : 1024;
+        dirLight.shadow.mapSize.height = isCoarsePointer ? 512 : 1024;
         scene.add(dirLight);
 
         pointLight = new THREE.PointLight(0x4285F4, 2.2, 10);
@@ -349,6 +390,7 @@
     function resetRobotPose() {
         if (!container) return;
         const rect = container.getBoundingClientRect();
+        containerRect = rect;
         lastClientX = rect.left + rect.width * 0.35;
         lastClientY = rect.top + rect.height * 0.35;
         solveArmAiming();
@@ -359,7 +401,7 @@
         lastClientX = clientX;
         lastClientY = clientY;
         hasReceivedCursor = true;
-        solveArmAiming();
+        aimDirty = true; // solved in the next animation frame (mousemove can fire >200 Hz)
     }
 
     function onWindowMouseMove(e) {
@@ -385,7 +427,7 @@
     function solveArmAiming() {
         if (!container || !camera || !raycaster) return;
 
-        const rect = container.getBoundingClientRect();
+        const rect = containerRect || (containerRect = container.getBoundingClientRect());
         // Compute NDC in the camera view frustum of the 3D container
         const rawX = ((lastClientX - rect.left) / rect.width) * 2 - 1;
         const rawY = -((lastClientY - rect.top) / rect.height) * 2 + 1;
@@ -443,27 +485,12 @@
 
     function onScroll() {
         if (!container) return;
-        const rect = container.getBoundingClientRect();
+        containerRect = null; // position changed; re-measure lazily
 
-        // If hero section / 3D canvas is visible in viewport, keep cursor aiming strictly active!
-        if (rect.bottom > 0 && rect.top < window.innerHeight) {
-            solveArmAiming();
-        } else {
-            // Hero canvas is scrolled completely off-screen: choreograph standby poses for other sections
-            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-            scrollProgress = maxScroll > 0 ? window.scrollY / maxScroll : 0;
-
-            const sections = document.querySelectorAll('section[data-section-index]');
-            let currentIdx = 0;
-            sections.forEach((sec, idx) => {
-                const sRect = sec.getBoundingClientRect();
-                if (sRect.top <= window.innerHeight * 0.55 && sRect.bottom >= window.innerHeight * 0.15) {
-                    currentIdx = parseInt(sec.getAttribute('data-section-index') || idx);
-                }
-            });
-            activeSectionIndex = currentIdx;
-            applyScrollChoreography(currentIdx, scrollProgress);
-        }
+        // While the hero canvas is visible keep cursor aiming active. Once it is scrolled
+        // off-screen the render loop is paused, so no per-section choreography is computed.
+        // (applyScrollChoreography below is kept for reference / future use.)
+        if (isInView) aimDirty = true;
     }
 
     function applyScrollChoreography(sectionIdx, progress) {
@@ -524,13 +551,8 @@
     }
 
     function updateTelemetryHUD() {
-        const hudJ1 = document.getElementById('hud-j1');
-        const hudJ2 = document.getElementById('hud-j2');
-        const hudJ3 = document.getElementById('hud-j3');
-        const hudJ4 = document.getElementById('hud-j4');
-        const hudX = document.getElementById('hud-x');
-        const hudY = document.getElementById('hud-y');
-        const hudZ = document.getElementById('hud-z');
+        if (!hudEls) return;
+        const { j1: hudJ1, j2: hudJ2, j3: hudJ3, j4: hudJ4, x: hudX, y: hudY, z: hudZ } = hudEls;
 
         if (hudJ1) hudJ1.textContent = `${(joints.j1 * 57.2958).toFixed(1)}°`;
         if (hudJ2) hudJ2.textContent = `${(joints.j2 * 57.2958).toFixed(1)}°`;
@@ -538,8 +560,7 @@
         if (hudJ4) hudJ4.textContent = `${(joints.j4 * 57.2958).toFixed(1)}°`;
 
         if (payloadMesh && hudX && hudY && hudZ) {
-            const pos = new THREE.Vector3();
-            payloadMesh.getWorldPosition(pos);
+            const pos = payloadMesh.getWorldPosition(tmpWorldPos);
             hudX.textContent = pos.x.toFixed(2);
             hudY.textContent = pos.y.toFixed(2);
             hudZ.textContent = pos.z.toFixed(2);
@@ -547,14 +568,16 @@
     }
 
     function animate() {
-        requestAnimationFrame(animate);
+        if (!isInView || document.hidden) {
+            rafId = null; // loop restarts from the IntersectionObserver / visibilitychange
+            return;
+        }
+        rafId = requestAnimationFrame(animate);
 
-        // Continuously solve cursor aiming when hero canvas is visible
-        if (container) {
-            const rect = container.getBoundingClientRect();
-            if (rect.bottom > 0 && rect.top < window.innerHeight) {
-                solveArmAiming();
-            }
+        // Solve cursor aiming at most once per frame, only when input or scroll changed it
+        if (aimDirty) {
+            aimDirty = false;
+            solveArmAiming();
         }
 
         // Smooth joint damping (Euler filter, response rate ~ 14 Hz)
@@ -588,14 +611,18 @@
             materials.laser.opacity = (currentTheme === 'dark' ? 0.65 : 0.45) + Math.sin(performance.now() * 0.008) * 0.15;
         }
 
-        updateTelemetryHUD();
+        // Text HUD at ~20 Hz is plenty and avoids layout work every frame
+        if ((frameCount++ % 3) === 0) updateTelemetryHUD();
         renderer.render(scene, camera);
     }
 
     function onWindowResize() {
         if (!container || !renderer || !camera) return;
+        containerRect = null;
+        aimDirty = true;
         const width = container.clientWidth;
         const height = container.clientHeight;
+        if (!width || !height) return;
         camera.aspect = width / height;
         camera.updateProjectionMatrix();
         renderer.setSize(width, height);

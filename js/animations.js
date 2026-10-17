@@ -67,6 +67,11 @@
     // 2. 3D Pop-Out Card Physics (Google Antigravity style)
     // ==========================================
     function init3DCardTilt() {
+        // Tilt only makes sense with a real mouse; on touch screens it sticks after a tap
+        const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!canHover || reduceMotion) return;
+
         const tiltCards = document.querySelectorAll('.tilt-card');
 
         tiltCards.forEach(card => {
@@ -191,13 +196,15 @@
 
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
+            if (window.PortfolioScroll) window.PortfolioScroll.stop();
         }
 
         function closeModal() {
             modal.classList.remove('active');
             modalVideo.pause();
-            modalVideo.src = '';
+            modalVideo.removeAttribute('src');
             document.body.style.overflow = '';
+            if (window.PortfolioScroll) window.PortfolioScroll.start();
         }
 
         document.querySelectorAll('[data-inspect-src]').forEach(trigger => {
@@ -238,11 +245,15 @@
 
                 const loopId = btn.getAttribute('data-loop');
                 if (loopId === '1') {
+                    imgEl.width = 1080; imgEl.height = 1620;
                     imgEl.src = 'assets/images/loop_1.gif';
+                    imgEl.setAttribute('data-inspect-src', imgEl.src);
                     if (badgeEl) badgeEl.textContent = 'Loop 1 — Initial Adaptation Phase';
                     if (descEl) descEl.textContent = 'High transient overshoot on Joint 2 & Joint 3 before weights converge. Controller adapts online from cold.';
                 } else {
+                    imgEl.width = 1080; imgEl.height = 1350;
                     imgEl.src = 'assets/images/loop_4.gif';
+                    imgEl.setAttribute('data-inspect-src', imgEl.src);
                     if (badgeEl) badgeEl.textContent = 'Loop 4 — Fully Converged Trajectory Tracking';
                     if (descEl) descEl.textContent = 'Online weights Ŵ and Kx have settled. Joint error reduced by >75%, tracking Cartesian trajectories with sub-millimeter precision.';
                 }

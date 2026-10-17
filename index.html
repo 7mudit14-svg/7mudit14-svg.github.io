@@ -3,18 +3,53 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0a0c10">
     <meta name="description"
         content="Mudit Todi — Robotics & Adaptive Control Systems Engineer. 4-DOF MRAC Manipulator, Cartpole IMC-MRAC in MuJoCo, GPS-Denied Surveillance UAV (IMC 2025), ROS 2, and Embedded Vision.">
+    <meta name="author" content="Mudit Todi">
+    <meta name="keywords" content="Mudit Todi, robotics engineer, control systems, MRAC, adaptive control, ROS 2, MuJoCo, Gazebo, MoveIt 2, UAV, PCB design, LNMIIT">
+    <link rel="canonical" href="https://7mudit14-svg.github.io/">
     <title>Mudit Todi · Robotics & Control Systems</title>
 
+    <!-- Social previews (LinkedIn / X / WhatsApp / Slack) -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://7mudit14-svg.github.io/">
+    <meta property="og:title" content="Mudit Todi · Robotics & Adaptive Control Systems Engineer">
+    <meta property="og:description" content="1 kHz MRAC on a 4-DOF arm in ROS 2, Robust MRAC Cartpole in MuJoCo (-43.7% ISE), GPS-denied UAV demoed at IMC 2025, production PCBs.">
+    <meta property="og:image" content="https://7mudit14-svg.github.io/assets/images/arm_render.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%234285F4'/%3E%3Ctext x='16' y='22' font-family='Arial' font-weight='700' font-size='15' fill='white' text-anchor='middle'%3EMT%3C/text%3E%3C/svg%3E">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Mudit Todi",
+        "url": "https://7mudit14-svg.github.io/",
+        "jobTitle": "Robotics & Control Systems Engineer",
+        "alumniOf": "The LNM Institute of Information Technology (LNMIIT), Jaipur",
+        "knowsAbout": ["Robotics", "Adaptive Control", "MRAC", "ROS 2", "MuJoCo", "UAVs", "PCB Design"],
+        "sameAs": [
+            "https://github.com/7mudit14-svg",
+            "https://www.linkedin.com/in/mudit-todi-b401ab347/"
+        ]
+    }
+    </script>
+
     <!-- Google Fonts & Stylesheet -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="css/style.css">
 
-    <!-- External Libraries: Three.js for 3D kinematics, Anime.js for kinetic animations -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <!-- Theme engine runs before first paint so there is no light/dark flash -->
+    <script src="js/theme.js"></script>
+
+    <!-- External Libraries: Three.js for 3D kinematics, Anime.js for kinetic animations, Lenis for smooth scroll.
+         Deferred so they no longer block first paint. -->
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.min.js"></script>
 </head>
 
 <body>
@@ -29,7 +64,7 @@
                 <span class="brand-pill">Robotics</span>
             </a>
 
-            <ul class="nav-links">
+            <ul class="nav-links" id="nav-links">
                 <li><a href="#philosophy">Mindset</a></li>
                 <li><a href="#project-arm">4-DOF Arm</a></li>
                 <li><a href="#project-cartpole">Cartpole Lab</a></li>
@@ -67,13 +102,18 @@
                 </div>
 
                 <a href="https://github.com/7mudit14-svg" target="_blank" rel="noopener noreferrer"
-                    class="btn btn-primary" style="padding: 7px 16px; font-size: 0.8rem;">
+                    class="btn btn-primary nav-github-btn" style="padding: 7px 16px; font-size: 0.8rem;" aria-label="GitHub profile">
                     <span>GitHub</span>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                         <path
                             d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
                     </svg>
                 </a>
+
+                <!-- Mobile menu toggle (visible ≤ 768px) -->
+                <button class="nav-menu-toggle" id="nav-menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+                    <span></span><span></span><span></span>
+                </button>
             </div>
         </nav>
     </header>
@@ -274,7 +314,7 @@
                     with MoveIt 2 Cartesian trajectory planning and a custom 1 kHz C++ adaptive controller.
                 </p>
 
-                <div class="project-card tilt-card reveal-on-scroll">
+                <div class="project-card reveal-on-scroll">
                     <div class="project-card-header">
                         <div class="project-header-left">
                             <h3 style="font-size: 1.4rem; font-weight: 700;">Direct Model Reference Adaptive Control + Robust Disturbance Compensation</h3>
@@ -371,7 +411,7 @@
                             </div>
 
                             <div class="media-container">
-                                <img id="mrac-loop-preview-img" src="assets/images/loop_1.gif" alt="MRAC Training Loop Simulation"
+                                <img id="mrac-loop-preview-img" loading="lazy" decoding="async" width="1080" height="1620" src="assets/images/loop_1.gif" alt="MRAC Training Loop Simulation"
                                     data-inspect-src="assets/images/loop_1.gif" data-inspect-title="4-DOF Arm Gazebo Harmonic Simulation"
                                     data-inspect-desc="Full physics simulation in ROS 2 Jazzy + Gazebo Harmonic. Tracking Cartesian target points planned by MoveIt 2.">
                                 <div class="media-caption">
@@ -385,14 +425,14 @@
                                     data-inspect-src="assets/images/robust_mrac_controller.png"
                                     data-inspect-title="Robust MRAC Controller Architecture"
                                     data-inspect-desc="Block diagram showing state-feedback gain adaptation Kx, feedforward Kr, and weight estimation W feeding the robust nonlinear term u_ad.">
-                                    <img src="assets/images/robust_mrac_controller.png" alt="Controller Architecture Diagram">
+                                    <img loading="lazy" decoding="async" width="706" height="614" src="assets/images/robust_mrac_controller.png" alt="Controller Architecture Diagram">
                                     <div class="media-caption" style="font-size: 0.7rem;">Architecture Block Diagram (Click)</div>
                                 </div>
                                 <div class="media-container" style="cursor: pointer;"
                                     data-inspect-src="assets/images/mrac_lyapunov.png"
                                     data-inspect-title="Lyapunov Stability Energy V(t)"
                                     data-inspect-desc="Lyapunov function V = eᵀPe over time, demonstrating asymptotic convergence without drift.">
-                                    <img src="assets/images/mrac_lyapunov.png" alt="Lyapunov Stability Plot">
+                                    <img loading="lazy" decoding="async" width="1633" height="740" src="assets/images/mrac_lyapunov.png" alt="Lyapunov Stability Plot">
                                     <div class="media-caption" style="font-size: 0.7rem;">Lyapunov Convergence V(t) (Click)</div>
                                 </div>
                             </div>
@@ -416,7 +456,7 @@
                 </p>
 
                 <!-- High-Tech Cartpole Simulator Card -->
-                <div class="cartpole-lab-card tilt-card reveal-on-scroll">
+                <div class="cartpole-lab-card reveal-on-scroll">
                     <!-- Controls Bar -->
                     <div class="cartpole-controls-bar">
                         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
@@ -495,7 +535,7 @@
                 </div>
 
                 <!-- Authentic Video & Comparison Data Card -->
-                <div class="project-card tilt-card reveal-on-scroll">
+                <div class="project-card reveal-on-scroll">
                     <div class="project-card-header">
                         <div class="project-header-left">
                             <h3 style="font-size: 1.3rem; font-weight: 700;">Authentic MuJoCo 3.x Gymnasium Simulation Video</h3>
@@ -562,12 +602,12 @@
 
                         <div class="project-media-side">
                             <div class="media-container" style="background: #000;">
-                                <video autoplay loop muted playsinline poster="assets/images/cartpole_diagram.png"
+                                <video data-autoplay-visible loop muted playsinline preload="none" width="2520" height="1080" poster="assets/images/cartpole_diagram.png"
                                     data-inspect-src="assets/videos/cartpole_comparision.mp4" data-inspect-type="video"
                                     data-inspect-title="MuJoCo 3-Controller Comparison"
                                     data-inspect-desc="Left: Cascaded IMC-PID (blue) | Middle: Standard MRAC (red) | Right: Robust MRAC (green).">
                                     <source src="assets/videos/cartpole_comparision.mp4" type="video/mp4">
-                                    <img src="assets/images/cartpole_comparision.gif" alt="Cartpole Comparison Animation">
+                                    <img loading="lazy" decoding="async" src="assets/images/cartpole_comparision.gif" alt="Cartpole Comparison Animation">
                                 </video>
                                 <div class="media-caption">
                                     <span style="font-weight: 700; color: var(--text-accent);">Authentic Video: 3-Controller Benchmark</span><br>
@@ -580,14 +620,14 @@
                                     data-inspect-src="assets/images/cartpole_diagram.png"
                                     data-inspect-title="Cartpole Lagrangian Plant Schematic"
                                     data-inspect-desc="Cart of mass M on rail with pinned pole of mass m and length 2l.">
-                                    <img src="assets/images/cartpole_diagram.png" alt="Cartpole Schematic">
+                                    <img loading="lazy" decoding="async" width="1098" height="899" src="assets/images/cartpole_diagram.png" alt="Cartpole Schematic">
                                     <div class="media-caption" style="font-size: 0.7rem;">Cartpole Schematic (Click)</div>
                                 </div>
                                 <div class="media-container" style="cursor: pointer;"
                                     data-inspect-src="assets/images/robust_weights_W.png"
                                     data-inspect-title="Robust Weight Adaptation W(t)"
                                     data-inspect-desc="Evolution of nonlinear basis weights W under sinusoidal disturbance.">
-                                    <img src="assets/images/robust_weights_W.png" alt="Weight Adaptation Plot">
+                                    <img loading="lazy" decoding="async" width="1907" height="910" src="assets/images/robust_weights_W.png" alt="Weight Adaptation Plot">
                                     <div class="media-caption" style="font-size: 0.7rem;">Adaptive Weights W (Click)</div>
                                 </div>
                             </div>
@@ -609,7 +649,7 @@
                     surveillance system utilizing optical-flow position locking and LiFi / infrared directional downlinks in RF-denied environments.
                 </p>
 
-                <div class="project-card tilt-card reveal-on-scroll">
+                <div class="project-card reveal-on-scroll">
                     <div class="project-card-header">
                         <div class="project-header-left">
                             <h3 style="font-size: 1.4rem; font-weight: 700;">Optical Wireless Communication & Computer Vision Platform</h3>
@@ -677,7 +717,7 @@
                                 data-inspect-src="assets/images/imc25_team.jpg"
                                 data-inspect-title="Project Team at India Mobile Congress (IMC) 2025"
                                 data-inspect-desc="Demonstration of the GPS-denied surveillance drone prototype at IMC 2025. Project Mentor: Dr. Divyang Rawal.">
-                                <img src="assets/images/imc25_team.jpg" alt="Team at India Mobile Congress 2025">
+                                <img loading="lazy" decoding="async" width="1600" height="1200" src="assets/images/imc25_team.jpg" alt="Team at India Mobile Congress 2025">
                                 <div class="media-caption">
                                     <span style="font-weight: 700; color: var(--text-accent);">Demonstrated at India Mobile Congress 2025</span><br>
                                     <span style="font-size: 0.72rem;">Project Mentor: Dr. Divyang Rawal · LNMIIT Team</span>
@@ -713,7 +753,7 @@
                     an intelligent battery power-path charging board and a high-density multi-peripheral main controller board for a kids companion robot.
                 </p>
 
-                <div class="project-card tilt-card reveal-on-scroll">
+                <div class="project-card reveal-on-scroll">
                     <div class="project-card-header">
                         <div class="project-header-left">
                             <h3 style="font-size: 1.4rem; font-weight: 700;">Dual-Board Architecture · SEVEN Kids Companion Robot</h3>
@@ -785,7 +825,7 @@
                                 data-inspect-src="assets/images/3d_pcb_head.png"
                                 data-inspect-title="SEVEN Companion Robot — Main Controller Board (Head PCB)"
                                 data-inspect-desc="3D CAD component layout render of the multi-peripheral main controller board designed at S7 Innovation Labs LLP. Features I2S audio, I2C sensing, shared SPI, and MCU carrier with ESD protection.">
-                                <img src="assets/images/3d_pcb_head.png" alt="SEVEN Companion Robot Head PCB 3D Render">
+                                <img loading="lazy" decoding="async" width="2160" height="1466" src="assets/images/3d_pcb_head.png" alt="SEVEN Companion Robot Head PCB 3D Render">
                                 <div class="media-caption">
                                     <span style="font-weight: 700; color: var(--text-accent);">Main Controller Board (Head PCB) — 3D Render</span><br>
                                     <span style="font-size: 0.72rem;">SEVEN Companion Robot · S7 Innovation Labs LLP · Click to inspect</span>
@@ -1053,7 +1093,7 @@
                 <span class="modal-title">Telemetry & Asset Inspection</span>
                 <button class="modal-close-btn" aria-label="Close modal">&times;</button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" data-lenis-prevent>
                 <img class="modal-image" src="" alt="Full view preview" style="display: none;">
                 <video class="modal-video" src="" controls style="display: none; width: 100%;"></video>
                 <div class="modal-description"></div>
@@ -1062,11 +1102,11 @@
     </div>
 
     <!-- Scripts: Theme, Anti-Gravity BG, 3D Kinematics, Cartpole Simulator, Kinetic Animations -->
-    <script src="js/theme.js"></script>
-    <script src="js/antigravity-bg.js"></script>
-    <script src="js/three-robot.js"></script>
-    <script src="js/cartpole-sim.js"></script>
-    <script src="js/animations.js"></script>
+    <script defer src="js/smooth-scroll.js"></script>
+    <script defer src="js/antigravity-bg.js"></script>
+    <script defer src="js/three-robot.js"></script>
+    <script defer src="js/cartpole-sim.js"></script>
+    <script defer src="js/animations.js"></script>
 </body>
 
 </html>

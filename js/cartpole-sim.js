@@ -22,6 +22,10 @@
     let simCanvas, simCtx;
     let graphCanvas, graphCtx;
     let animId = null;
+    let isInView = false;
+    let lastFrameTime = 0;
+    let accumulator = 0;
+    let idleFrames = 0;
 
     // Simulation State Flag: Starts PAUSED by default
     let isRunning = false;
@@ -103,8 +107,24 @@
         renderOscilloscope();
         updateHUD();
 
-        // Main animation loop
-        loop();
+        // Main animation loop: only runs while the lab is on screen and the tab is visible
+        const labCard = simCanvas.closest('.cartpole-lab-card') || simCanvas;
+        const io = new IntersectionObserver((entries) => {
+            isInView = entries[0].isIntersecting;
+            if (isInView) startLoop();
+        }, { rootMargin: '100px 0px' });
+        io.observe(labCard);
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) startLoop();
+        });
+    }
+
+    function startLoop() {
+        if (animId === null && isInView && !document.hidden) {
+            lastFrameTime = performance.now();
+            accumulator = 0;
+            animId = requestAnimationFrame(loop);
+        }
     }
 
     function setupControls() {
@@ -179,14 +199,26 @@
         }
     }
 
+    // Size the backing store at devicePixelRatio so lines stay crisp on phones / retina screens.
+    // Drawing code keeps working in CSS pixels via cssW / cssH and the context transform.
+    function sizeCanvas(canvas, ctx, fallbackH) {
+        if (!canvas || !canvas.parentElement) return;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const w = canvas.parentElement.clientWidth;
+        const h = canvas.clientHeight || canvas.parentElement.clientHeight || fallbackH;
+        canvas.cssW = w;
+        canvas.cssH = h;
+        canvas.width = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
     function resize() {
-        if (simCanvas && simCanvas.parentElement) {
-            simCanvas.width = simCanvas.parentElement.clientWidth;
-            simCanvas.height = simCanvas.parentElement.clientHeight || 240;
-        }
-        if (graphCanvas && graphCanvas.parentElement) {
-            graphCanvas.width = graphCanvas.parentElement.clientWidth;
-            graphCanvas.height = graphCanvas.parentElement.clientHeight || 180;
+        sizeCanvas(simCanvas, simCtx, 240);
+        sizeCanvas(graphCanvas, graphCtx, 180);
+        if (simCtx && graphCtx) {
+            renderCartpole();
+            renderOscilloscope();
         }
     }
 
@@ -438,8 +470,8 @@
     }
 
     function renderCartpole() {
-        const w = simCanvas.width;
-        const h = simCanvas.height;
+        const w = simCanvas.cssW || simCanvas.width;
+        const h = simCanvas.cssH || simCanvas.height;
         simCtx.clearRect(0, 0, w, h);
 
         const isDark = (window.PortfolioTheme && window.PortfolioTheme.getActiveTheme()) === 'dark';
@@ -581,8 +613,8 @@
     }
 
     function renderOscilloscope() {
-        const w = graphCanvas.width;
-        const h = graphCanvas.height;
+        const w = graphCanvas.cssW || graphCanvas.width;
+        const h = graphCanvas.cssH || graphCanvas.height;
         graphCtx.clearRect(0, 0, w, h);
 
         const isDark = (window.PortfolioTheme && window.PortfolioTheme.getActiveTheme()) === 'dark';
@@ -649,10 +681,29 @@
         graphCtx.stroke();
     }
 
-    function loop() {
-        updatePhysics();
-        renderCartpole();
-        renderOscilloscope();
+    // Fixed 60 Hz physics step decoupled from the display refresh rate,
+    // so the sim runs at real-time speed on 60 / 90 / 120 / 144 Hz screens alike.
+    function loop(now) {
+        if (!isInView || document.hidden) {
+            animId = null;
+            return;
+        }
+        const STEP_MS = 1000 / 60;
+        accumulator += Math.min(now - lastFrameTime, 100);
+        lastFrameTime = now;
+
+        let stepped = false;
+        while (accumulator >= STEP_MS) {
+            updatePhysics();
+            accumulator -= STEP_MS;
+            stepped = true;
+        }
+
+        // While paused, a slow ~10 Hz redraw is enough to pick up theme / control changes
+        if (stepped || (!isRunning && (idleFrames++ % 6) === 0)) {
+            renderCartpole();
+            renderOscilloscope();
+        }
         animId = requestAnimationFrame(loop);
     }
 

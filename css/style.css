@@ -154,12 +154,15 @@ code, pre, .font-mono {
     transform-style: preserve-3d;
     perspective: 1000px;
     transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease, border-color 0.28s ease;
-    will-change: transform;
 }
 
-.tilt-card:hover {
-    box-shadow: var(--card-hover-shadow);
-    border-color: var(--border-accent);
+/* Tilt is mouse-only (see animations.js); promote to a GPU layer only while hovered */
+@media (hover: hover) and (pointer: fine) {
+    .tilt-card:hover {
+        box-shadow: var(--card-hover-shadow);
+        border-color: var(--border-accent);
+        will-change: transform;
+    }
 }
 
 .tilt-card .sheen-reflection {
@@ -178,6 +181,31 @@ code, pre, .font-mono {
 
 .tilt-card:hover .sheen-reflection {
     opacity: 1;
+}
+
+/* -------------------------------------------------------------------
+   LENIS SMOOTH SCROLL (from lenis/dist/lenis.css)
+   ------------------------------------------------------------------- */
+html.lenis,
+html.lenis body {
+    height: auto;
+}
+
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+    overflow: clip;
+}
+
+.lenis [data-lenis-prevent] {
+    overscroll-behavior: contain;
+}
+
+.lenis.lenis-smooth iframe {
+    pointer-events: none;
+}
+
+/* Anchor targets land below the fixed navbar (Lenis honours scroll-margin-top too) */
+section[id] {
+    scroll-margin-top: 84px;
 }
 
 /* -------------------------------------------------------------------
@@ -273,6 +301,35 @@ code, pre, .font-mono {
     color: var(--text-primary);
     background: var(--bg-surface-pill);
 }
+
+/* Mobile hamburger (hidden on desktop) */
+.nav-menu-toggle {
+    display: none;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--border-radius-full);
+    background: var(--bg-surface-pill);
+    cursor: pointer;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 0;
+}
+
+.nav-menu-toggle span {
+    display: block;
+    width: 16px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--text-primary);
+    transition: transform 0.25s ease, opacity 0.2s ease;
+}
+
+.nav-open .nav-menu-toggle span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.nav-open .nav-menu-toggle span:nth-child(2) { opacity: 0; }
+.nav-open .nav-menu-toggle span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
 
 .nav-actions {
     display: flex;
@@ -763,6 +820,13 @@ code, pre, .font-mono {
     gap: 36px;
 }
 
+/* Let grid columns shrink below their content's width (wide tables scroll instead) */
+.project-card-body > *,
+.cartpole-grid-layout > *,
+.hero-grid > * {
+    min-width: 0;
+}
+
 .project-text h4 {
     font-size: 1.1rem;
     font-weight: 700;
@@ -1243,15 +1307,139 @@ code, pre, .font-mono {
 }
 
 @media (max-width: 768px) {
-    .navbar {
-        border-radius: var(--border-radius-md);
-        padding: 8px 14px;
+    /* --- Navbar + dropdown menu --- */
+    .navbar-wrapper {
+        top: max(10px, env(safe-area-inset-top));
     }
-    .nav-links {
+    .navbar {
+        position: relative;
+        border-radius: var(--border-radius-md);
+        padding: 7px 10px 7px 14px;
+        width: calc(100% - 20px);
+    }
+    .nav-menu-toggle {
+        display: inline-flex;
+    }
+    .nav-github-btn {
+        padding: 8px !important;
+    }
+    .nav-github-btn span {
         display: none;
     }
+    .nav-links {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        right: 0;
+        margin: 0;
+        padding: 8px;
+        background: var(--bg-surface-elevated);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--border-radius-md);
+        box-shadow: var(--card-shadow);
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-6px);
+        transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+    }
+    .nav-open .nav-links {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+    .nav-links a {
+        display: block;
+        font-size: 0.95rem;
+        padding: 12px 14px;
+        border-radius: var(--border-radius-sm);
+    }
+
+    /* --- Cheaper rendering on phones: frosted glass on every card is a big scroll-jank cost --- */
+    .stat-card, .mindset-card, .project-card, .cartpole-lab-card,
+    .stack-category-card, .contact-card {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        background: var(--bg-surface-elevated);
+    }
+
+    /* --- Hero --- */
+    .hero-section {
+        min-height: auto;
+        padding-top: 96px;
+        padding-bottom: 32px;
+    }
+    .hero-grid {
+        gap: 28px;
+    }
     .hero-title {
-        font-size: 2.5rem;
+        font-size: 2.3rem;
+    }
+    .hero-pitch-lead {
+        font-size: 1.02rem;
+    }
+    .hero-cta-group {
+        flex-wrap: wrap;
+    }
+    .hero-3d-wrapper {
+        height: 380px;
+    }
+    .hud-bottom-telemetry {
+        flex-wrap: wrap;
+        gap: 4px 12px;
+        font-size: 0.68rem;
+        padding: 6px 10px;
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+    }
+    .hud-bottom-telemetry .telemetry-item:last-child {
+        display: none; /* tool position: too wide for phones */
+    }
+    .hud-top-left {
+        top: 12px;
+        left: 12px;
+    }
+    .hud-controls-top-right {
+        top: 52px;
+        right: 10px;
+        left: auto;
+    }
+
+    /* --- Sections --- */
+    .section {
+        padding: 64px 0;
+    }
+    .container {
+        padding: 0 16px;
+    }
+    .section-title {
+        font-size: 1.75rem;
+    }
+    .section-subtitle {
+        font-size: 1rem;
+        margin-bottom: 28px;
+    }
+    .stat-strip {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin: 28px 0 24px 0;
+    }
+    .stat-card {
+        padding: 16px;
+    }
+    .stat-value {
+        font-size: 1.6rem;
+    }
+    .mindset-card {
+        padding: 24px 18px;
+    }
+    .mindset-quote {
+        font-size: 1.2rem;
+        padding-left: 16px;
+        margin-bottom: 24px;
     }
     .contact-grid {
         grid-template-columns: 1fr;
@@ -1259,12 +1447,119 @@ code, pre, .font-mono {
     .pipeline-flow {
         grid-template-columns: 1fr;
     }
-    .stat-strip {
-        grid-template-columns: 1fr;
+
+    /* --- Project cards --- */
+    .project-card {
+        margin-bottom: 40px;
+    }
+    .project-card-header {
+        flex-direction: column;
+        gap: 14px;
+        padding: 22px 18px 16px 18px;
+    }
+    .project-card-header h3 {
+        font-size: 1.15rem !important;
+    }
+    .project-card-body {
+        padding: 20px 18px;
+        gap: 24px;
+    }
+    .status-chip {
+        white-space: normal;
+    }
+    /* Wide tables scroll sideways instead of breaking the layout */
+    .project-metrics-table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+        font-size: 0.8rem;
+    }
+    .project-metrics-table th, .project-metrics-table td {
+        padding: 8px 10px;
+    }
+    .math-pill {
+        font-size: 0.8rem;
+        overflow-x: auto;
+    }
+    .loop-switch-btn {
+        font-size: 0.74rem;
+        padding: 8px 8px;
+    }
+
+    /* --- Cartpole lab --- */
+    .cartpole-lab-card {
+        padding: 16px;
+        margin-bottom: 40px;
+    }
+    .cartpole-controls-bar {
+        padding: 12px;
+    }
+    .cartpole-controls-bar > div {
+        width: 100%;
+        min-width: 0;
+    }
+    .cartpole-controls-bar select {
+        flex: 1 1 100%;
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+    }
+    #cartpole-viewport-canvas {
+        height: 210px;
+    }
+    .telemetry-readout-strip {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    /* --- Modal + footer --- */
+    .modal-content-card {
+        width: 94%;
+        max-height: 88vh;
+    }
+    .modal-body {
+        padding: 14px;
     }
     .footer-grid {
         flex-direction: column;
         gap: 20px;
         text-align: center;
+    }
+    .footer-socials {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 420px) {
+    .brand-pill {
+        display: none;
+    }
+    .hero-title {
+        font-size: 2rem;
+    }
+    .hero-3d-wrapper {
+        height: 330px;
+    }
+    .stat-value {
+        font-size: 1.35rem;
+    }
+}
+
+/* Touch screens: no sticky hover lifts after a tap */
+@media (hover: none) {
+    .btn-primary:hover, .btn-outline:hover, .pipeline-step:hover, .tech-chip:hover {
+        transform: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
     }
 }
